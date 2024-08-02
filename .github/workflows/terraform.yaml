@@ -1,7 +1,7 @@
 name: Terraform Deployment
 
 on:
-  workflow_dispatch:
+  workflow_dispatch
 
 jobs:
   terraform:
@@ -19,7 +19,8 @@ jobs:
       - name: Authenticate to Google Cloud Project
         uses: 'google-github-actions/auth@v2'
         with:
-          credentials_json: '${{ secrets.GCP_CREDENTIALS }}'
+          service_account: sa-tf-gh-actions@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+          workload_identity_provider: ${{ vars.GCP_WI_PROVIDER_ID }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
