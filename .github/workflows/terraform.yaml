@@ -49,10 +49,14 @@ jobs:
         id: plan
         run: |
           terraform plan \
+            --out=out.tfplan \
             --var "project_id=${{ env.GCP_PROJECT_ID }}"
+        continue-on-error: true
 
       - name: Terraform Apply
         id: apply
         run: |
           terraform apply \
+            --auto-approve \
             --var "project_id=${{ env.GCP_PROJECT_ID }}"
+
