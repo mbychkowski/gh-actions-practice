@@ -222,7 +222,7 @@ gcloud iam workload-identity-pools providers create-oidc "gke-github-deployment"
 
 ### 5) Allow authentications from the Workload Identity Pool to your Google Cloud Service Account.
 
-export WORKLOAD_IDENTITY_POOL_ID="projects/273494143447/locations/global/workloadIdentityPools/github
+export WORKLOAD_IDENTITY_POOL_ID=projects/273494143447/locations/global/workloadIdentityPools/github
 
 export REPO=gfilicetti/gke-github-deployment
 
