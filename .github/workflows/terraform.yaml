@@ -7,7 +7,12 @@ jobs:
   terraform:
     name: Deploy Infrastructure
     runs-on: ubuntu-latest
-
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    env:
+      GCP_PROJECT_ID: ${{ vars.GCP_PROJECT_ID }}
+      GCP_WI_PROVIDER_ID: ${{ vars.GCP_WI_PROVIDER_ID }}
     defaults:
       run:
         working-directory: terraform
@@ -19,8 +24,8 @@ jobs:
       - name: Authenticate to Google Cloud Project
         uses: 'google-github-actions/auth@v2'
         with:
-          service_account: sa-tf-gh-actions@${{ vars.GCP_PROJECT_ID }}.iam.gserviceaccount.com
-          workload_identity_provider: ${{ vars.GCP_WI_PROVIDER_ID }}
+          service_account: sa-tf-gh-actions@${{ env.GCP_PROJECT_ID }}.iam.gserviceaccount.com
+          workload_identity_provider: ${{ env.GCP_WI_PROVIDER_ID }}
 
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
