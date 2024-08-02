@@ -175,3 +175,60 @@ gcloud config set project <your-unique-project-id>
 ```
 
 and follow the authentication flow.
+
+## GH SA w/ wi federation
+
+https://github.com/google-github-actions/auth?tab=readme-ov-file#workload-identity-federation-through-a-service-account
+
+### 1) (Optional) Create a Google Cloud Service Account. If you already have a Service Account, take note of the email address and skip this step.
+
+```
+gcloud iam service-accounts create sa-tf-gh-actions \
+  --project "${PROJECT_ID}"
+```
+
+### 2) Create a Workload Identity Pool:
+
+```
+gcloud iam workload-identity-pools create "github" \
+  --project="${PROJECT_ID}" \
+  --location="global" \
+  --display-name="GitHub Actions Pool"
+```
+
+### 3) Get the full ID of the Workload Identity Pool:
+
+```
+gcloud iam workload-identity-pools describe "github" \
+  --project="${PROJECT_ID}" \
+  --location="global" \
+  --format="value(name)"
+```
+
+### 4) Create a Workload Identity Provider in that pool:
+
+export GITHUB_ORG=gfilicetti
+
+```
+gcloud iam workload-identity-pools providers create-oidc "gke-github-deployment" \
+  --project="${PROJECT_ID}" \
+  --location="global" \
+  --workload-identity-pool="github" \
+  --display-name="GitHub repo Provider" \
+  --attribute-mapping="google.subject=assertion.sub,attribute.actor=assertion.actor,attribute.repository=assertion.repository,attribute.repository_owner=assertion.repository_owner" \
+  --attribute-condition="assertion.repository_owner == '${GITHUB_ORG}'" \
+  --issuer-uri="https://token.actions.githubusercontent.com"
+```
+
+### 5) Allow authentications from the Workload Identity Pool to your Google Cloud Service Account.
+
+export WORKLOAD_IDENTITY_POOL_ID="projects/273494143447/locations/global/workloadIdentityPools/github
+
+export REPO=gfilicetti/gke-github-deployment
+
+```
+gcloud iam service-accounts add-iam-policy-binding "sa-tf-gh-actions@${PROJECT_ID}.iam.gserviceaccount.com" \
+  --project="${PROJECT_ID}" \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${REPO}"
+```
