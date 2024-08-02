@@ -207,10 +207,10 @@ gcloud iam workload-identity-pools describe "github" \
 
 ### 4) Create a Workload Identity Provider in that pool:
 
-export GITHUB_ORG=gfilicetti
+export GITHUB_ORG=mbychkowsi
 
 ```
-gcloud iam workload-identity-pools providers create-oidc "gke-github-deployment" \
+gcloud iam workload-identity-pools providers create-oidc "gke-github-deployment-mbski" \
   --project="${PROJECT_ID}" \
   --location="global" \
   --workload-identity-pool="github" \
@@ -224,11 +224,21 @@ gcloud iam workload-identity-pools providers create-oidc "gke-github-deployment"
 
 export WORKLOAD_IDENTITY_POOL_ID=projects/273494143447/locations/global/workloadIdentityPools/github
 
-export REPO=gfilicetti/gke-github-deployment
+export REPO=mbychkowski/gh-actions-practice
 
 ```
 gcloud iam service-accounts add-iam-policy-binding "sa-tf-gh-actions@${PROJECT_ID}.iam.gserviceaccount.com" \
   --project="${PROJECT_ID}" \
   --role="roles/iam.workloadIdentityUser" \
   --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${REPO}"
+```
+
+### 6) Extract the Workload Identity Provider resource name:
+
+```
+gcloud iam workload-identity-pools providers describe "gke-github-deployment-mbski" \
+  --project="${PROJECT_ID}" \
+  --location="global" \
+  --workload-identity-pool="github" \
+  --format="value(name)"
 ```

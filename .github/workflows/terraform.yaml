@@ -43,9 +43,16 @@ jobs:
 
       - name: Terraform Validate
         id: validate
-        run: terraform validate -no-color
+        run: terraform validate
 
       - name: Terraform Plan
         id: plan
-        run: terraform plan -no-color
-        continue-on-error: true
+        run: |
+          terraform plan \
+            --var "project_id=${{ env.GCP_PROJECT_ID }}"
+
+      - name: Terraform Apply
+        id: apply
+        run: |
+          terraform apply \
+            --var "project_id=${{ env.GCP_PROJECT_ID }}"
