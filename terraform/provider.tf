@@ -25,10 +25,7 @@ terraform {
   }
 
   # TODO: Use this to store the TF state file in GCS
-  backend "gcs" {
-    bucket = "${var.project_id}"
-    prefix = "bkt-tfstate"
-  }
+  backend "gcs" {}
 }
 
 provider "google" {
