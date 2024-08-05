@@ -32,3 +32,16 @@ for SUCCINCT_ROLE in \
     --role "roles/$SUCCINCT_ROLE" "$PROJECT_ID" \
     --condition=None
 done
+
+# 2. Enable key Google Cloud service APIs
+gcloud services enable --project $PROJECT_ID \
+  aiplatform.googleapis.com \
+  artifactregistry.googleapis.com \
+  cloudbuild.googleapis.com \
+  cloudresourcemanager.googleapis.com \
+  compute.googleapis.com \
+  container.googleapis.com \
+  containerfilesystem.googleapis.com \
+  containerregistry.googleapis.com \
+  iam.googleapis.com \
+  servicecontrol.googleapis.com

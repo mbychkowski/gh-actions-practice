@@ -59,5 +59,4 @@ jobs:
         id: apply
         run: |
           terraform apply "out.tfplan" \
-            -auto-approve \
             -var "project_id=${{ env.GCP_PROJECT_ID }}"

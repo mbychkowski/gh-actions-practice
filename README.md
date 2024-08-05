@@ -1,6 +1,7 @@
 # GenAI-quickstart-dev
 
-GenAI Quickstart guide for Games on Google Cloud
+This is a guide to help you get up a GKE ready cluster with built-in best
+practices via Terraform and automated deployments with Github Actions.
 
 ## Prerequisites
 

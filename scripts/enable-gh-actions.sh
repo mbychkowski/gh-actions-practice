@@ -5,9 +5,9 @@ GITHUB_ORG=""
 GITHUB_REPO="gke-github-deployment"
 
 read -p "Enter Github organization or username: " GITHUB_ORG
-read -p "Enter Github repository name [gke-github-deployment]: " GITHUB_REPO
+read -p "Enter Github repository name [${GITHUB_REPO}]: " GITHUB_REPO
 
-GITHUB_REPO=${GITHUB_REPO:-gke-github-deployment}
+GITHUB_REPO=${GITHUB_REPO:-${GITHUB_REPO}}
 
 # Fetch Project ID:
 PROJECT_ID=$(gcloud config get-value project)
@@ -29,7 +29,7 @@ gcloud iam workload-identity-pools create "github" \
   --display-name="GitHub Actions Pool"
 
 # 3. Create a Workload Identity Provider in that pool.
-gcloud iam workload-identity-pools providers create-oidc "${GITHUB_ORG}-gke-github-deployment" \
+gcloud iam workload-identity-pools providers create-oidc "${GITHUB_ORG:0:5}-${GITHUB_REPO}" \
   --project="${PROJECT_ID}" \
   --location="global" \
   --workload-identity-pool="github" \
@@ -50,13 +50,14 @@ gcloud iam service-accounts add-iam-policy-binding "${GH_ACTIONS_SA}@${PROJECT_I
   --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${GITHUB_ORG}/${GITHUB_REPO}"
 
 # 5. Extract the Workload Identity Provider resource name.
-GCP_WI_PROVIDER_ID=$(gcloud iam workload-identity-pools providers describe "${GITHUB_ORG}-gke-github-deployment" \
+GCP_WI_PROVIDER_ID=$(gcloud iam workload-identity-pools providers describe "${GITHUB_ORG:0:5}-${GITHUB_REPO}" \
   --project="${PROJECT_ID}" \
   --location="global" \
   --workload-identity-pool="github" \
   --format="value(name)")
 
 cat << EOF
+
 ----- GITHUB ACTIONS ENV KEY/VALUE -----
 
 GCP_PROJECT_ID: ${PROJECT_ID}
