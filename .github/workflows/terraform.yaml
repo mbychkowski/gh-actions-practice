@@ -58,5 +58,4 @@ jobs:
       - name: Terraform Apply
         id: apply
         run: |
-          terraform apply "out.tfplan" \
-            -var "project_id=${{ env.GCP_PROJECT_ID }}"
+          terraform apply "out.tfplan"
