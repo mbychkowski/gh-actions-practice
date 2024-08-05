@@ -17,8 +17,10 @@ for SUCCINCT_ROLE in \
     clouddeploy.jobRunner \
     clouddeploy.releaser \
     compute.networkAdmin \
-    container.developer \
+    compute.securityAdmin \
+    container.clusterAdmin \
     iam.serviceAccountAdmin \
+    iam.serviceAccountUser \
     pubsub.subscriber \
     resourcemanager.projectIamAdmin \
     run.developer \

@@ -1,11 +1,11 @@
-name: Terraform Deployment
+name: Terraform DESTROY
 
 on:
   workflow_dispatch
 
 jobs:
   terraform:
-    name: Deploy Infrastructure
+    name: DESTROY Infrastructure
     runs-on: ubuntu-latest
     permissions:
       contents: 'read'
@@ -32,32 +32,15 @@ jobs:
         with:
           terraform_version: "1.6.3"  # Replace with your desired version
 
-      - name: Terraform fmt
-        id: fmt
-        run: terraform fmt -check
-        continue-on-error: true
-
       - name: Terraform Init
         id: init
         run: |
           terraform init \
             -backend-config="bucket=bkt-tfstate-${{ env.GCP_PROJECT_ID }}"
 
-      - name: Terraform Validate
-        id: validate
-        run: terraform validate
-
-      - name: Terraform Plan
-        id: plan
+      - name: Terraform Destroy
+        id: destroy
         run: |
-          terraform plan \
-            -out=out.tfplan \
-            -var "project_id=${{ env.GCP_PROJECT_ID }}"
-        continue-on-error: true
-
-      - name: Terraform Apply
-        id: apply
-        run: |
-          terraform apply "out.tfplan" \
+          terraform destroy \
             -auto-approve \
             -var "project_id=${{ env.GCP_PROJECT_ID }}"
