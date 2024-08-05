@@ -41,7 +41,7 @@ jobs:
         id: init
         run: |
           terraform init \
-            --backend-config=bucket=bkt-tfstate-${{ env.GCP_PROJECT_ID }}
+            -backend-config="bucket=bkt-tfstate-${{ env.GCP_PROJECT_ID }}"
 
       - name: Terraform Validate
         id: validate
@@ -51,14 +51,14 @@ jobs:
         id: plan
         run: |
           terraform plan \
-            --out=out.tfplan \
-            --var "project_id=${{ env.GCP_PROJECT_ID }}"
+            -out=out.tfplan \
+            -var "project_id=${{ env.GCP_PROJECT_ID }}"
         continue-on-error: true
 
       - name: Terraform Apply
         id: apply
         run: |
           terraform apply \
-            --auto-approve \
-            --var "project_id=${{ env.GCP_PROJECT_ID }}"
+            -auto-approve \
+            -var "project_id=${{ env.GCP_PROJECT_ID }}"
 
