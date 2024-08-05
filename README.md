@@ -1,66 +1,81 @@
-# GenAI-quickstart-dev
+# GKE Github Actions Deployment
 
-This is a guide to help you get up a GKE ready cluster with built-in best
-practices via Terraform and automated deployments with Github Actions.
+This is a guide to help set up a GKE  cluster with built-in best practices via
+Terraform and automated deployments with GitHub Actions.
 
 ## Prerequisites
 
 - [Terraform](https://www.terraform.io/downloads.html)
 - [gcloud](https://cloud.google.com/sdk/docs/install)
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
-- [skaffold](https://skaffold.dev/docs/)
+- [skaffold](https://skaffold.dev/docs/) --> TBD
 
 ## Getting started
+
+There are 2 options for deployment:
+
+1) Manually running throught the Terraform deployment with `terraform` cli.
+
+2) Setting up GitHub Actions and automating deplotments on [workflow dispatch](https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-workflow-runs/manually-running-a-workflow)
+
+For both options a fresh new Google Cloud Project is assumed, with the user
+already authenticated andconfigured to work in that project via the `gcloud`
+command line.
+
+- `gcloud auth application-default login`
+- `gcloud config set <your-project-id>`
+
+### (Option 1) Manual deployment with Terraform cli.
 
 The following steps below will walk you through the setup guide for *GenAI Quickstart*. The process will walk through enabling the proper **Google Cloud APIs**, creating the resources via **Terraform**, and deployment of the **Kubernetes manifests** needed to run the project.
 
 > __Note:__ These steps assume you already have a running project in Google Cloud for which you have IAM permissions to deploy resources into.
 
-### 1) Clone this git repository
+#### 1) Clone this git repository
 
-```
+```bash
 git clone git@github.com:zaratsian/GenAI-quickstart-dev.git
 
 cd GenAI-quickstart-dev
 ```
 
-### 2) Set ENV variable
+#### 2) Set ENV variable
 
 Set your unique Project ID for Google Cloud
 
-```
+```bash
 export PROJECT_ID=$(gcloud config list --format 'value(core.project)' 2>/dev/null)
 ```
 
 Set default location for Google Cloud
 
-```
+```bash
 export LOCATION=us-west1
 ```
 
 To better follow along with this quickstart guide, set `CUR_DIR` env variable
 
-```
+```bash
 export CUR_DIR=$(pwd)
 ```
 
-### 3) Confirm user authentication to Google Cloud project
+#### 3) Confirm user authentication to Google Cloud project
 
-```
+```bash
 gcloud auth list
 ```
 
-Check if your authentication is ok and your project_id
+Check if your authentication is ok and your project id is set.
 
-```
+```bash
 gcloud projects describe $PROJECT_ID
 ```
 
 You should see the your `projectId` listed with an `ACTIVE` state.
 
-### 4) Enable Google Cloud APIs
+#### 4) Enable Google Cloud APIs
 
-```
+```bash
 gcloud services enable --project $PROJECT_ID \
   aiplatform.googleapis.com \
   artifactregistry.googleapis.com \
@@ -74,9 +89,9 @@ gcloud services enable --project $PROJECT_ID \
   servicecontrol.googleapis.com
 ```
 
-### 5) Deploy infrastructure with Terraform
+#### 5) Deploy infrastructure with Terraform
 
-```
+```bash
 cd $CUR_DIR/terraform
 
 cat terraform.example.tfvars | sed -e "s:your-unique-project-id:$PROJECT_ID:g" > terraform.tfvars
@@ -90,82 +105,106 @@ terraform apply
 
 The deployment of cloud resources can take between 5 - 10 minutes. For a detailed view of the resources deployed see [README](terraform/README.md) in `terraform` directory.
 
-### 6) Setup GKE credentials
-
-After cloud resources have successfully been deployed with Terraform. Get newly created GKE cluster credentials.
-
-```
-gcloud container clusters get-credentials genai-quickstart --zone us-west1-b --project $PROJECT_ID
-```
-
-### 7) Deploy GenAI workloads on GKE
-
-Switch to the `genai` directory
-
-```
-cd $CUR_DIR/genai
-```
-
-Set kubernetes manifests for GenAI workloads to use your unique project id
-
-```
-find . -type f -name "*.yaml" -exec sed -i "s:your-unique-project-id:$PROJECT_ID:g" {} +
-```
-
-Build and run GenAI workloads with **Skaffold**
-
-```
-export SKAFFOLD_DEFAULT_REPO=$LOCATION-docker.pkg.dev/$PROJECT_ID/repo-genai-quickstart
-
-# To run all apis and models (requires a GPU node for stable-diffusion)
-skaffold run --build-concurrency=0
-
-# To run only stable-diffusion (requires a GPU node)
-#skaffold run --module stable-diffusion-api-cfg,stable-diffusion-endpt-cfg
-
-# To run Vertex chat (Vertex AI is required)
-#skaffold run --module vertex-chat-api-cfg
-```
-
-### 8) Tests
-
-Access the API - You can test the application and all the APIs from here  :)
-
-```
-export EXT_IP=`kubectl -n genai get svc genai-api -o jsonpath='{.status.loadBalancer.ingress.*.ip}'`
-echo http://${EXT_IP}/genai_docs
-```
-
-Test the API (command line - curl)
-
-```
-curl -X 'POST' "http://${EXT_IP}/genai/text" \
-  -H 'accept: application/json' \
-  -H 'Content-Type: application/json' \
-  -d '{"prompt": "Who are the founders of Google?"}'
-```
-
-## Project cleanup
-
-In `genai` directory
-
-```
-cd $CUR_DIR/genai
-
-skaffold delete
-```
+#### Project cleanup
 
 In `terraform` directory
 
-```
+```bash
 cd $CUR_DIR/terraform
 
 terraform destroy
 ```
 
+### (Option 2) Automation setup with GitHub Actions
+
+To setup GitHub Actions securely with our Google Cloud environment we will need
+to do a one time setup for [Workload Identity federation through a Google Cloud
+service account](https://github.com/google-github-actions/auth?tab=readme-ov-file#workload-identity-federation-through-a-service-account).
+To assist in this we have 3 scripts that will assist in setup under `./scripts`:
+
+* `./scripts/enable-iam.sh`
+* `./scripts/enable-gh-actions.sh`
+* `./scripts/setup-tfstate.sh`
+
+#### 1) Create Fork of this repository
+
+Setting up GitHub Actions for automated deployments with Terraform requires the
+Google Cloud administrator to create a [fork](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/fork-a-repo) of this repo, to personalize variable settings for unique cloud environment.
+
+#### 2) Confirm user authentication to Google Cloud project
+
+```bash
+gcloud auth list
+```
+
+Check if your authentication is ok and your project id is set.
+
+```bash
+gcloud projects describe $PROJECT_ID
+```
+
+You should see the your `projectId` listed with an `ACTIVE` state.
+
+#### 3) Enable IAM and Google Cloud service APIs for project
+
+```bash
+sh ./scripts/enable-iam.sh
+```
+
+#### 4) Enable Workload Identity federation with Google Cloud service account
+
+```bash
+sh ./scripts/enable-gh-actions.sh
+```
+
+Running this will prompt the user with 2 required inputs:
+
+1) The GitHub organization, if repo is forked under personal account this will
+most likely be your GitHub username.
+2) The name of the GitHub repositry, by default this is set to
+`gke-github-deployment`.
+
+Make note of the returned output from running this script to setup GitHub
+Actions.
+
+```
+----- GITHUB ACTIONS ENV KEY/VALUE -----
+
+GCP_PROJECT_ID: ${PROJECT_ID}
+GCP_WI_PROVIDER_ID: ${GCP_WI_PROVIDER_ID}
+
+----------------------------------------
+```
+
+#### 5) Setup GitHub Actions in Repository.
+
+With the key/value pair from the previous step. Configure the pair in your
+GitHub repository under **Settings > Secrets and variabls > Actions > Variables**
+
+![Setup GitHub Actions in Repository](docs/img/gh-actions-env-setup.png)
+
+#### 6) Setup Terraform backend to maintain state remotely.
+
+```bash
+sh ./scripts/setup-tfstate.sh
+```
+
+#### 7) Run workflow
+
+This concludes our one time setup and now all that is left is to run the
+workflow. Navigate to **Actions** tab in GitHub. You should notice 2 workflows,
+**Terraform Deployment** and **Terraform DESTROY**. The later will clean-up
+resources at the end. Click **Terraform Deployment > Run workflow > Branch: main > Run workflow**. To trigger the Terraform deployment process.
+
+![Run Terraform deployment workflow](docs/img/gh-actions-workflow-run.png)
+
+#### Project cleanup
+
+Run **Terraform DESTROY** workflow from GitHub Actions page.
+
 ## Troubleshooting
 
-### Not authenticated with Google Cloud project
+#### Not authenticated with Google Cloud project
 
 If you are not running the above project in Google Cloud shell, make sure you are logged in and authenticated with your desired project:
 
@@ -177,18 +216,16 @@ gcloud config set project <your-unique-project-id>
 
 and follow the authentication flow.
 
-## GH SA w/ wi federation
+---
 
-https://github.com/google-github-actions/auth?tab=readme-ov-file#workload-identity-federation-through-a-service-account
-
-### 1) (Optional) Create a Google Cloud Service Account. If you already have a Service Account, take note of the email address and skip this step.
+#### 1) (Optional) Create a Google Cloud Service Account. If you already have a Service Account, take note of the email address and skip this step.
 
 ```
 gcloud iam service-accounts create sa-tf-gh-actions \
   --project "${PROJECT_ID}"
 ```
 
-### 2) Create a Workload Identity Pool:
+#### 2) Create a Workload Identity Pool:
 
 ```
 gcloud iam workload-identity-pools create "github" \
@@ -197,7 +234,7 @@ gcloud iam workload-identity-pools create "github" \
   --display-name="GitHub Actions Pool"
 ```
 
-### 3) Get the full ID of the Workload Identity Pool:
+#### 3) Get the full ID of the Workload Identity Pool:
 
 ```
 gcloud iam workload-identity-pools describe "github" \
@@ -206,7 +243,7 @@ gcloud iam workload-identity-pools describe "github" \
   --format="value(name)"
 ```
 
-### 4) Create a Workload Identity Provider in that pool:
+#### 4) Create a Workload Identity Provider in that pool:
 
 export GITHUB_ORG=mbychkowsi
 
@@ -221,7 +258,7 @@ gcloud iam workload-identity-pools providers create-oidc "gke-github-deployment-
   --issuer-uri="https://token.actions.githubusercontent.com"
 ```
 
-### 5) Allow authentications from the Workload Identity Pool to your Google Cloud Service Account.
+#### 5) Allow authentications from the Workload Identity Pool to your Google Cloud Service Account.
 
 export WORKLOAD_IDENTITY_POOL_ID=projects/273494143447/locations/global/workloadIdentityPools/github
 
@@ -234,7 +271,7 @@ gcloud iam service-accounts add-iam-policy-binding "sa-tf-gh-actions@${PROJECT_I
   --member="principalSet://iam.googleapis.com/${WORKLOAD_IDENTITY_POOL_ID}/attribute.repository/${REPO}"
 ```
 
-### 6) Extract the Workload Identity Provider resource name:
+#### 6) Extract the Workload Identity Provider resource name:
 
 ```
 gcloud iam workload-identity-pools providers describe "gke-github-deployment-mbski" \

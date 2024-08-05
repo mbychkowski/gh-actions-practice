@@ -1,11 +1,11 @@
 #!/bin/bash
 
-# Set Github "organization" and repo name:
+# Set GitHub "organization" and repo name:
 GITHUB_ORG=""
 GITHUB_REPO="gke-github-deployment"
 
-read -p "Enter Github organization or username: " GITHUB_ORG
-read -p "Enter Github repository name [${GITHUB_REPO}]: " GITHUB_REPO
+read -p "Enter GitHub organization or username: " GITHUB_ORG
+read -p "Enter GitHub repository name [${GITHUB_REPO}]: " GITHUB_REPO
 
 GITHUB_REPO=${GITHUB_REPO:-${GITHUB_REPO}}
 
@@ -15,7 +15,7 @@ PROJECT_ID=$(gcloud config get-value project)
 # Fetch Project Number from Project ID:
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
 
-# Github Actions SA:
+# GitHub Actions SA:
 GH_ACTIONS_SA="sa-tf-gh-actions"
 
 # 1. Create a Google Cloud Service Account.
