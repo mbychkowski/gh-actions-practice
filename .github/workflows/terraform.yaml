@@ -41,8 +41,7 @@ jobs:
         id: init
         run: |
           terraform init \
-            --backend-config=bucket=${{ env.GCP_PROJECT_ID }} \
-            --backend-config=prefix=bkt-tfstate
+            --backend-config=bucket=bkt-tfstate-${{ env.GCP_PROJECT_ID }}
 
       - name: Terraform Validate
         id: validate

@@ -243,10 +243,10 @@ gcloud iam workload-identity-pools providers describe "gke-github-deployment-mbs
   --format="value(name)"
 ```
 
-gcloud storage buckets create "gs://bkt-tf-state-${PROJECT_ID}" \
+gcloud storage buckets create "gs://bkt-tfstate-${PROJECT_ID}" \
   --project="${PROJECT_ID}" \
   --location=us-central1 \
   --public-access-prevention \
   --uniform-bucket-level-access
 
-gsutil versioning set on "gs://bkt-tf-state-${PROJECT_ID}"
+gsutil versioning set on "gs://bkt-tfstate-${PROJECT_ID}"
